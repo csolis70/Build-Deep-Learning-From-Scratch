@@ -149,3 +149,7 @@ def test_repr_has_data_and_grad():
     a = Value(2.0)
     r = repr(a)
     assert "data=" in r and "grad=" in r
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-v"]))
