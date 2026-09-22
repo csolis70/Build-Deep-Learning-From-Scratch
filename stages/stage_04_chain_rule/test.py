@@ -144,3 +144,6 @@ def test_backward_does_not_zero_existing_grad():
     first = a.grad
     out.backward()  # second pass, no zeroing
     assert a.grad == pytest.approx(2.0 * first), "grad accumulates across backward calls"
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-v"]))

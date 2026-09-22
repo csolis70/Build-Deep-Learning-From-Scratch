@@ -44,8 +44,13 @@ class Value(Stage3_Value):
         """
         # TODO: topo = topo_sort(self); self.grad = 1.0;
         # for v in reversed(topo): v._backward()
-        raise NotImplementedError("stage_04: implement backward()")
 
+        topo = topo_sort(self)
+        self.grad = 1
+
+        for i in range(len(topo)):
+            v = topo[-(1 + i)]
+            v._backward()
 
 def topo_sort(root: "Value") -> List["Value"]:
     """Return nodes reachable from ``root`` in topological order.
@@ -60,7 +65,21 @@ def topo_sort(root: "Value") -> List["Value"]:
     def build(v: "Value") -> None:
         # TODO: if v not in visited: add v; recurse into each child in v._prev;
         # then append v to order (post-order)
-        raise NotImplementedError("stage_04: implement the DFS post-order build")
+        if v not in visited:
+            if not v._prev:
+                order.append(v)
+                visited.add(v)
+
+            else:
+
+                for parent in v._prev:
+                    build(parent)
+
+                order.append(v)
+                visited.add(v)
 
     # TODO: build(root); return order
-    raise NotImplementedError("stage_04: implement topo_sort")
+
+    build(root)
+
+    return order
