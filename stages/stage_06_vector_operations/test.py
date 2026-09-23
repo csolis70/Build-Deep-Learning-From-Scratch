@@ -247,3 +247,7 @@ def test_composite_neuron_preactivation_gradient():
     for i in range(n):
         assert approx(w[i].grad, numeric_grad(f_w, w_vals, i), tol=1e-4)
     assert approx(b.grad, numeric_grad(f_b, [b_val], 0), tol=1e-4)
+
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v']))
