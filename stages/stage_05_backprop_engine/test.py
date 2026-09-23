@@ -240,3 +240,6 @@ def test_repr_contains_data_and_grad():
     a.grad = 4.0
     s = repr(a)
     assert "2.0" in s and "4.0" in s, f"repr missing data/grad: {s}"
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v']))
