@@ -286,3 +286,6 @@ def test_reused_matrix_accumulates():
     an = np_of(a)
     expected = (G @ an.T + an.T @ G).tolist()  # left-factor grad + right-factor grad
     assert_grid_close(grads_of(A), expected, "reused-matrix grad accumulation")
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v']))

@@ -35,10 +35,16 @@ class Mat:
     def __init__(self, data: Iterable[Iterable[Scalar]]) -> None:
         """Build self.data: List[List[Value]] from a 2-D iterable; set rows/cols
         (wrap non-`Value` entries, keep shared nodes; ValueError on ragged rows)."""
-        self.data: List[List[Stage5_Value]] = []
-        self.rows: int = 0
-        self.cols: int = 0
-        raise NotImplementedError("TODO: build a List[List[Value]] and set rows/cols")
+
+        col_dim = set([len(row) for row in data])
+        assert len(col_dim) == 1, 'data must not contain ragged rows. They must all have the same dimension (length)'
+
+        self.data: List[List[Stage5_Value]] = [
+            [data[i][j] if isinstance(data[i][j], Value) else Value(data[i][j]) for j in range(len(data[0]))
+             ] for i in range(len(data))
+             ]
+        self.rows: int = len(self.data)
+        self.cols: int = len(self.data[0])
 
     @property
     def shape(self) -> Tuple[int, int]:
@@ -46,11 +52,11 @@ class Mat:
 
     def __getitem__(self, i: int) -> List[Stage5_Value]:
         """Return row `i` as a list of `Value`."""
-        raise NotImplementedError("TODO")
+        return self.data[i]
 
     def __iter__(self):
         """Iterate over rows."""
-        raise NotImplementedError("TODO")
+        return iter(self.data)
 
     def __repr__(self) -> str:
         return f"Mat(shape={self.shape})"
@@ -58,31 +64,68 @@ class Mat:
     def matmul(self, other: "Mat") -> "Mat":
         """Matrix product C = self @ other; (m,k)@(k,n) -> (m,n), where
         C[i][j] = sum_p self[i][p] * other[p][j]. ValueError on inner-dim mismatch."""
-        raise NotImplementedError("TODO: build C[i][j] = sum_p self[i][p]*other[p][j]")
+
+        assert self.cols == other.rows, 'Matrix dimension mismatch.'
+
+        C = Mat([[0 for j in range(other.cols)] for i in range(self.rows)])
+
+        for i in range(self.rows):
+            row = Vec(self.data[i])
+            
+            for j in range(other.T.rows):
+                col = Vec(other.T.data[j])
+
+                C[i][j] = row.dot(col)
+
+        return C 
 
     def __matmul__(self, other: "Mat") -> "Mat":
         """The `@` operator; delegates to `matmul`."""
-        raise NotImplementedError("TODO: return self.matmul(other)")
+        return self.matmul(other)
 
     def transpose(self) -> "Mat":
         """Transpose: C[j][i] = self[i][j], shape (cols, rows); reuse the same
         `Value` objects so gradient flows back to the originals."""
-        raise NotImplementedError("TODO: build transposed Mat reusing the Values")
+        C = Mat([[0 for j in range(self.rows)] for i in range(self.cols)])
+
+        for i in range(self.rows):
+            for j in range(self.cols):
+                C[j][i] = self[i][j]
+
+        return C 
+
 
     @property
     def T(self) -> "Mat":
         """Property alias for `transpose()`."""
-        raise NotImplementedError("TODO: return self.transpose()")
+        return self.transpose()
 
     def reshape(self, rows: int, cols: int) -> "Mat":
         """Reshape to (rows, cols) row-major, reusing the `Value`s; ValueError if
         the element count changes."""
-        raise NotImplementedError("TODO: row-major flatten then regroup, reusing Values")
+
+        if rows * cols != self.rows * self.cols:
+            raise ValueError('Reshape element count must match original element count.')
+
+        C = Mat([[0 for j in range(cols)] for i in range(rows)])
+        elements = [self[i][j] for i in range(self.rows) for j in range(self.cols)]
+
+        for i in range(rows):
+            for j in range(cols):
+                C[i][j] = elements[i * cols + j]
+
+        return C
 
     def sum(self) -> Stage5_Value:
         """Sum of all elements as one `Value`: s = sum_{i,j} self[i][j]."""
-        raise NotImplementedError("TODO: sum every Value into one scalar")
+
+        result = 0
+        for i in range(self.rows):
+            for j in range(self.cols):
+                result += self[i][j]
+        return result
 
     def mean(self) -> Stage5_Value:
         """Mean of all elements as one `Value`: sum() / N, N = rows*cols."""
-        raise NotImplementedError("TODO: self.sum() scaled by 1/N")
+
+        return 1/(self.rows * self.cols) * self.sum()
