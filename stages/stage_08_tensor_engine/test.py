@@ -545,3 +545,6 @@ def test_numbers_on_both_sides():
     assert np.isclose(float(out.data), 9.0)
     out.backward()
     assert np.isclose(float(x.grad), -0.5)
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v']))
