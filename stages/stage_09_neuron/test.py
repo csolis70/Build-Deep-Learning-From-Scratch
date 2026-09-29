@@ -256,3 +256,6 @@ def test_zero_grad():
     n.zero_grad()
     assert np.allclose(as_array(n.w.grad), 0.0), "zero_grad must clear w.grad"
     assert np.allclose(as_array(n.b.grad), 0.0), "zero_grad must clear b.grad"
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v']))
