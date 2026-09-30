@@ -309,3 +309,6 @@ def test_columns_are_independent():
         assert np.isclose(Z[0, j], X[0] @ W[:, j], atol=ATOL), (
             f"output column {j} must equal X @ W[:, {j}]"
         )
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__,'-v']))

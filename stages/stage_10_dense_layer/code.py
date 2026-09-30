@@ -31,7 +31,13 @@ class Dense:
         seed: Optional[int] = None,
     ) -> None:
         # TODO: init leaf Tensors W (n_in, n_out) and b (n_out,); store dims/bias.
-        raise NotImplementedError("Dense.__init__")
+        rng = np.random.default_rng(seed=seed)
+
+        self.W = Tensor(rng.uniform(low= -1, high= 1, size=(n_in, n_out)))
+        self.b = Tensor(np.zeros((n_out,))) if bias else None
+        self.n_in = n_in
+        self.n_out = n_out
+        self.bias = bias
 
     def __call__(self, x: "Tensor") -> "Tensor":
         """Forward affine pass; (n_in,) -> (n_out,) or (B, n_in) -> (B, n_out).
@@ -40,18 +46,41 @@ class Dense:
         until stage_11), e.g. ``ones((B, 1)) @ b.reshape(1, n_out)``.
         """
         # TODO: implement the forward pass; let Tensor.backward supply gradients.
-        raise NotImplementedError("Dense.__call__")
+        assert isinstance(x, Tensor), 'input must be a Tensor'
+
+        if x.data.ndim == 1:
+            tmp_x = x.reshape(1, x.shape[0])
+        else:
+            tmp_x = x
+        
+        if self.bias: 
+            Z = tmp_x @ self.W + Tensor(np.ones((tmp_x.shape[0], 1))) @ self.b.reshape((1, self.n_out))
+
+        else:
+            Z = tmp_x @ self.W
+
+        if x.data.ndim == 1:
+            return Z.reshape(self.n_out,)
+
+        return Z
 
     def parameters(self) -> List["Tensor"]:
         """Return learnable params: [W, b] with bias, else [W]."""
         # TODO: return the parameter list.
-        raise NotImplementedError("Dense.parameters")
+        if self.bias:
+            return [self.W, self.b]
+        else:
+            return [self.W]
 
     def zero_grad(self) -> None:
         """Reset every parameter's gradient to zeros."""
         # TODO: zero each parameter's grad.
-        raise NotImplementedError("Dense.zero_grad")
+        if self.bias:
+            self.W.zero_grad()
+            self.b.zero_grad()
+        else:
+            self.W.zero_grad()
 
     def __repr__(self) -> str:
         # TODO: summarize n_in, n_out, bias.
-        raise NotImplementedError("Dense.__repr__")
+        return f'Dense(n_in={self.n_in}, n_out={self.n_out}, bias={self.bias})'
