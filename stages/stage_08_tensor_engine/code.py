@@ -251,7 +251,7 @@ class Tensor:
 
             result = left @ right # scalar result
 
-            out = self._make_tensor(result.reshape(()), (self, other), '@') 
+            out = self._make_tensor(result.reshape(()), (self, other), '@') # shape ()
 
             def _backward():
                 Tensor._accumulate(self, 
@@ -270,7 +270,7 @@ class Tensor:
 
             result = left @ right # (1,m) result
 
-            out = self._make_tensor(result.reshape(other.shape[1],), (self, other), '@')
+            out = self._make_tensor(result.reshape(other.shape[1],), (self, other), '@') # shape (m,)
 
             def _backward():
 
@@ -288,7 +288,7 @@ class Tensor:
 
             result = left @ right # (b,1) result
 
-            out = self._make_tensor(result.reshape(self.data.shape[0]), (self, other), '@')
+            out = self._make_tensor(result.reshape(self.data.shape[0],), (self, other), '@') # shape (b,)
 
             def _backward():
                 Tensor._accumulate(self, 
@@ -306,7 +306,7 @@ class Tensor:
 
             result = left @ right # (n,m) result
 
-            out = self._make_tensor(result, (self, other), '@')
+            out = self._make_tensor(result, (self, other), '@') # shape (n,m)
 
             def _backward():
                 Tensor._accumulate(self, out.grad @ right.T)
