@@ -594,3 +594,6 @@ def test_broadcast_div_keepdims_column_grad():
     # d/da = 1/b broadcast; d/db = sum_C(-a / b**2), keepdims.
     assert np.allclose(as_array(a.grad), np.broadcast_to(1.0 / b_np, (B, C)))
     assert np.allclose(as_array(b.grad), (-a_np / (b_np ** 2)).sum(axis=1, keepdims=True))
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v'])) 
