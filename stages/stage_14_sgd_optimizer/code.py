@@ -24,12 +24,13 @@ class Optimizer:
 
     def __init__(self, params: Iterable["Stage12_Tensor"]) -> None:
         # TODO: materialize `params` into a concrete list (not a one-shot iterable).
-        raise NotImplementedError("Optimizer.__init__")
+        self.params = list(params)
 
     def zero_grad(self) -> None:
         """Reset every parameter's .grad to zeros (call before each backward pass)."""
         # TODO: implement gradient reset.
-        raise NotImplementedError("Optimizer.zero_grad")
+        for param in self.params:
+            param.zero_grad()
 
     def step(self) -> None:
         """Apply one optimization update to ``self.params`` (subclass-defined)."""
@@ -41,13 +42,22 @@ class SGD(Optimizer):
 
     def __init__(self, params: Iterable["Stage12_Tensor"], lr: float = 0.01) -> None:
         # TODO: validate lr > 0, call super().__init__, store self.lr.
-        raise NotImplementedError("SGD.__init__")
+        assert lr > 0
+
+        super().__init__(params)
+        self.lr = lr
 
     def step(self) -> None:
         """One SGD step: in-place ``p.data -= self.lr * p.grad`` (skip params with grad None)."""
         # TODO: implement the in-place SGD update.
-        raise NotImplementedError("SGD.step")
+        
+        for p in self.params:
+            if p.grad is None:
+                continue
+
+            p.data -= self.lr * p.grad
 
     def __repr__(self) -> str:
         # TODO: e.g. f"SGD(lr={self.lr}, n_params={len(self.params)})"
-        raise NotImplementedError("SGD.__repr__")
+        
+        return f'SGD(lr={self.lr}, n_params={len(self.params)})'

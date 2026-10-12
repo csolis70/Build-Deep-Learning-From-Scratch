@@ -263,3 +263,6 @@ def test_step_count_changes_params_progressively():
     mags = [float(np.abs(h).sum()) for h in history]
     for prev, cur in zip(mags, mags[1:]):
         assert cur < prev, "each SGD step should shrink |w| toward the minimum at 0"
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v']))
