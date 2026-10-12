@@ -47,7 +47,23 @@ class Tensor(Stage11_Tensor):
 
         ``x.sum()`` of ``[[1,2],[3,4]]`` -> ``10``; after backward ``x.grad`` is all 1s.
         """
-        raise NotImplementedError("Tensor.sum")
+        out = self._make_tensor(np.sum(self.data, axis= axis, keepdims= keepdims), (self,))
+
+        def _backward():
+            if not keepdims and axis != None:
+                self.grad += np.expand_dims(out.grad, axis= axis) * np.ones(self.grad.shape)
+            
+            elif not keepdims:
+                tmp_axis = tuple([x for x in range(self.data.ndim)])
+                self.grad += np.expand_dims(out.grad, axis= tmp_axis) * np.ones(self.grad.shape)
+
+            else:
+                self.grad += out.grad * np.ones(self.grad.shape)
+            
+
+        out._backward = _backward
+
+        return out
 
     def mean(self, axis: Optional[Union[int, Tuple[int, ...]]] = None,
              keepdims: bool = False) -> "Tensor":
@@ -60,13 +76,36 @@ class Tensor(Stage11_Tensor):
 
         ``x.mean()`` of ``[[1,2],[3,4]]`` -> ``2.5``; after backward ``x.grad`` is all 1/4.
         """
-        raise NotImplementedError("Tensor.mean")
+        out = self._make_tensor(np.mean(self.data, axis= axis, keepdims= keepdims), (self,))
+
+        if isinstance(axis, int):
+            axis = (axis,)
+
+        def _backward():
+
+            N = np.size(self.data) if axis == None else sum([np.size(self.data, i) for i in axis])
+
+            if not keepdims and axis != None:
+                
+                self.grad += np.expand_dims(out.grad, axis= axis) * (1/N) * np.ones(self.grad.shape)
+
+            elif not keepdims:
+                tmp_axis = tuple([x for x in range(self.data.ndim)])
+                self.grad += np.expand_dims(out.grad, axis= tmp_axis) * (1/N) * np.ones(self.grad.shape)
+            else:
+                self.grad += out.grad * (1/N) * np.ones(self.grad.shape)
+
+        out._backward = _backward
+
+        return out
 
 
 def mse_loss(pred, target) -> "Tensor":
     """Mean squared error: scalar Tensor L = mean( (pred - target)**2 )."""
     # TODO: implement MSE using Tensor ops and .mean()
-    raise NotImplementedError("mse_loss")
+    L = ((pred - target) ** 2).mean()
+
+    return L
 
 
 def mae_loss(pred, target) -> "Tensor":
@@ -75,7 +114,9 @@ def mae_loss(pred, target) -> "Tensor":
     Build abs from Tensor ops (e.g. |d| = relu(d) + relu(-d)); never hand-write grads.
     """
     # TODO: implement MAE using Tensor ops and .mean()
-    raise NotImplementedError("mae_loss")
+    L = ( (pred - target).relu() + (target - pred).relu() ).mean()
+
+    return L
 
 
 def log_softmax(logits) -> "Tensor":
@@ -91,8 +132,14 @@ def log_softmax(logits) -> "Tensor":
     Steps: m off the data (constant); shift = logits - m; lse = log(sum(exp(shift)));
     return shift - lse.
     """
-    # TODO: implement the steps. Do NOT take the shortcut log(softmax(logits)).
-    raise NotImplementedError("log_softmax")
+    shift = logits - logits.data.max()
+
+    lse = ((shift.exp()).sum()).log()
+
+    return shift - lse
+
+
+    
 
 
 def softmax(logits) -> "Tensor":
@@ -102,7 +149,7 @@ def softmax(logits) -> "Tensor":
     overflow-safety.
     """
     # TODO: exponentiate log_softmax(logits).
-    raise NotImplementedError("softmax")
+    return log_softmax(logits).exp()
 
 
 def cross_entropy_loss(logits, target) -> "Tensor":
@@ -124,4 +171,13 @@ def cross_entropy_loss(logits, target) -> "Tensor":
     """
     # TODO: lp = log_softmax(logits); express `target` as a length-C vector y;
     #       return -(lp * y).sum().
-    raise NotImplementedError("cross_entropy_loss")
+
+    lp = log_softmax(logits)
+
+    if isinstance(target, int):
+        tmp_arr = np.zeros(logits.shape)
+        tmp_arr[target] = 1
+        target = tmp_arr
+
+
+    return -(lp * target).sum()
