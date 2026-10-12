@@ -205,3 +205,6 @@ def test_cross_entropy_grad_is_p_minus_y_over_b():
     assert np.allclose(g_analytic, expected, atol=ATOL), (
         f"CE grad != (p - y)/B:\n analytic={g_analytic}\n expected={expected}"
     )
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v']))

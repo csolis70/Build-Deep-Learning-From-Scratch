@@ -54,7 +54,13 @@ def log_softmax(logits) -> "Tensor":
     """
     # TODO: implement the 4 steps with axis=1, keepdims=True on the row reductions.
     #       Do NOT take the shortcut log(softmax(logits)).
-    raise NotImplementedError("log_softmax")
+    m = np.max(logits.data, axis= 1, keepdims= True)
+
+    shift = logits - m
+
+    logsumexp = ((shift.exp()).sum(axis= 1, keepdims= True)).log()
+
+    return shift - logsumexp
 
 
 def softmax(logits) -> "Tensor":
@@ -68,7 +74,7 @@ def softmax(logits) -> "Tensor":
     log_softmax and inherit its per-row stability.
     """
     # TODO: exponentiate log_softmax(logits).
-    raise NotImplementedError("softmax")
+    return log_softmax(logits).exp()
 
 
 def cross_entropy_loss(logits, targets) -> "Tensor":
@@ -101,4 +107,21 @@ def cross_entropy_loss(logits, targets) -> "Tensor":
     """
     # TODO: lp = log_softmax(logits); build the (B, C) target matrix y from `targets`;
     #       return -(lp * y).sum(axis=1).mean(); let backward() supply the gradient.
-    raise NotImplementedError("cross_entropy_loss")
+    
+    if targets.ndim == 1:
+
+        tmp_arr = np.zeros(logits.shape)
+
+        for i in range(logits.shape[0]):
+
+            tmp_arr[i][targets[i]] = 1
+
+        y =  tmp_arr
+
+    else:
+
+        y = targets
+
+    lp = log_softmax(logits)
+
+    return - (lp * y).sum(axis= 1).mean()
