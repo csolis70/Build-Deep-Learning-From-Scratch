@@ -52,7 +52,24 @@ def accuracy(pred: Union["Tensor", np.ndarray], y: Union["Tensor", np.ndarray]) 
     Returns a plain Python ``float`` in ``[0.0, 1.0]``.
     """
     # TODO: implement the metric described above.
-    raise NotImplementedError("accuracy")
+    if isinstance(pred, Tensor):
+        pred = pred.data
+
+    if isinstance(y, Tensor):
+        y = y.data
+
+    if np.size(y) != np.size(pred):
+        raise ValueError
+
+    pred = pred.ravel()
+    y = y.ravel()
+
+    bool_arr = (np.sign(pred) == np.sign(y)) & (pred != 0)
+
+    acc = float(np.mean(bool_arr.astype(int)))
+
+    return acc
+    
 
 
 # --------------------------------------------------------------------------- #
@@ -88,7 +105,43 @@ def train(
         the caller can immediately ``backward()`` something else.
     """
     # TODO: implement the loop per the contract above (the README derives it).
-    raise NotImplementedError("train")
+    if not (isinstance(X, Tensor) and isinstance(y, Tensor)):
+        raise TypeError('X and y must be Tensor instances')
+
+    if X.data.ndim != 2:
+        raise ValueError('X must be 2-D')
+
+    if X.shape[0] != y.shape[0]:
+        raise ValueError('Row counts must be the same')
+
+    if y.shape != (X.shape[0], 1) and y.shape != (X.shape[0],):
+        raise ValueError('y.shape is not a valid shape')
+
+    y = Tensor(y.data.reshape(y.shape[0], 1))
+
+    if optimizer is None:
+        optimizer = SGD(model.parameters(), lr)
+
+    loss = []
+    acc = []
+
+    optimizer.zero_grad()
+
+    for _ in range(epochs):
+        
+        pred = model(X)
+        acc.append(accuracy(pred, y))
+
+        L = mse_loss(pred, y)
+        loss.append(float(L.data))
+
+        L.backward()
+
+        optimizer.step()
+
+        optimizer.zero_grad()   
+
+    return {'loss': loss, 'accuracy': acc}
 
 
 # --------------------------------------------------------------------------- #

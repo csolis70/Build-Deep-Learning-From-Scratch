@@ -360,3 +360,6 @@ def test_plot_history_saves_figure(tmp_path):
     fig = plot_history(history, path=str(out))
     assert out.exists() and out.stat().st_size > 0
     assert fig is not None
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v']))
