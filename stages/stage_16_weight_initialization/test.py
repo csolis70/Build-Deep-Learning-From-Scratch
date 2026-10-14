@@ -352,3 +352,6 @@ def test_gradcheck_wrt_X_after_init():
     assert np.allclose(g_analytic, g_num, atol=ATOL, rtol=RTOL), (
         f"dL/dX mismatch after init:\n analytic={g_analytic}\n numeric ={g_num}"
     )
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v']))
