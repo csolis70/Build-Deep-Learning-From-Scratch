@@ -14,9 +14,17 @@ These tests verify the momentum optimizer built on ``SGD`` from ``stage_14``:
 If stage_08 / stage_14 / stage_17 are not implemented yet, the suite skips
 cleanly instead of erroring, so you can run it incrementally.
 
-Run with:  pytest stage_17_momentum/test.py
+Run with:  python test.py (from this directory), or
+          python stages\stage_17_momentum\test.py (from the repository root).
 """
 
+from pathlib import Path
+import sys
+
+# Make the curriculum shim importable when this file is run directly.
+_STAGES_DIR = str(Path(__file__).resolve().parents[1])
+if _STAGES_DIR not in sys.path:
+    sys.path.insert(0, _STAGES_DIR)
 import numpy as np
 import pytest
 
@@ -284,3 +292,6 @@ def test_quadratic_gradient_matches_central_diff():
             f"quadratic gradient mismatch:\n analytic={g_analytic}\n "
             f"numeric ={g_num}"
         )
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v']))
