@@ -50,7 +50,21 @@ class RMSProp(Stage14_Optimizer):
     def step(self) -> None:
         """Apply one in-place RMSProp update to every parameter; leave p.grad untouched."""
         # TODO: implement the RMSProp update (update self.v, then p.data).
-        raise NotImplementedError("RMSProp.step")
+        velocities = []
+        
+        for p, v in zip(self.params, self.v):
+            if p.grad is None:
+                velocities.append(np.zeros_like(p.data))
+                continue
+
+            g = p.grad + self.weight_decay * p.data 
+            v = self.beta * v + (1 - self.beta) * g ** 2
+            velocities.append(v)
+
+            p.data -= self.lr * g / (np.sqrt(v) + self.eps)
+
+        self.v = velocities            
+
 
 
 class Adam(Stage14_Optimizer):
@@ -80,13 +94,28 @@ class Adam(Stage14_Optimizer):
 
     def _effective_grad(self, p):
         """The gradient the update uses (coupled decay folded in). Hook overridden by AdamW."""
-        # TODO: return the effective gradient including coupled weight decay.
-        raise NotImplementedError("Adam._effective_grad")
+        return p.grad + self.weight_decay * p.data
+        
 
     def step(self) -> None:
         """Apply one in-place Adam update (increment t, update m/v with bias correction, step p.data)."""
         # TODO: implement the Adam update (mutate self.m / self.v / p.data); leave p.grad.
-        raise NotImplementedError("Adam.step")
+
+        self.t += 1
+        for p, m, v in zip(self.params, self.m, self.v):
+            if p.grad is None:
+                continue
+            g = self._effective_grad(p)
+            # [...] changes the contents of the array but keeps the same object reference. 
+            # This eliminates the need to update self.v and self.m seperately.
+            m[...] = self.beta1 * m + (1 - self.beta1) * g 
+            v[...] = self.beta2 *v + (1- self.beta2) * g ** 2
+
+            m_hat = m / (1 - self.beta1 ** self.t)
+            v_hat = v / (1 - self.beta2 ** self.t)
+
+            p.data -= self.lr * m_hat / (np.sqrt(v_hat) + self.eps)
+
 
 
 class AdamW(Adam):
@@ -98,9 +127,11 @@ class AdamW(Adam):
     def _effective_grad(self, p):
         """AdamW's adaptive update uses the raw gradient only (decay is decoupled)."""
         # TODO: return the raw gradient (no weight decay folded in).
-        raise NotImplementedError("AdamW._effective_grad")
+        return p.grad
 
     def step(self) -> None:
         """Run the standard Adam update, then apply decoupled weight decay to p.data."""
         # TODO: super().step() then decoupled decay on p.data. Document decay ordering.
-        raise NotImplementedError("AdamW.step")
+        super().step()
+        for p in self.params:
+            p.data *= self.weight_decay

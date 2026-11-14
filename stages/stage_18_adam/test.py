@@ -404,3 +404,6 @@ def test_independent_per_param_state():
     assert a.data.shape == (2,) and b.data.shape == (3,)
     assert not np.allclose(a.data, [1.0, 1.0])
     assert not np.allclose(b.data, [10.0, 10.0, 10.0])
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__, '-v']))
